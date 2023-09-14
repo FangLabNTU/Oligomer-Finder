@@ -1,6 +1,9 @@
 # Oligomer-Finder
 Oligomer-Finder is a program for seed molecule guided oligomers screened and annotation for MS/MS data. 
 
+![Cover](https://github.com/FangLabNTU/Oligomer-Finder/assets/67109373/b4018489-a248-4aa4-9c00-b2003291b166)
+
+
 Oligomer-Finder contains three modules: Seed oligomer-Finder, Homologue-Finder and Congener-Finder. There are two major databases available for use in depth.
 
 For Oligomer-Finder, we suggest that MS-DIAL software  (http://prime.psc.riken.jp/compms/msdial/main.html) be used for preliminary processing of raw MS data. The MS2 peak spots (in mat format, thousands for raw MS data put in a folder) and MS1 peak table (in txt format, one for raw MS data) exported by MS-DIAL will be used in Oligomer-Finder.
