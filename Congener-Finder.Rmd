@@ -1,0 +1,273 @@
+---
+#########################################
+# This script is for screening congeners in MS.
+# Changzhi Shi, Aug 27, 2023
+# Copyright @ Fudan University
+
+#########################################
+---
+
+# Load packages
+```{r}
+library(readxl)
+library(tidyr)
+library(dplyr)
+library(stringr)
+library (timeDate)
+```
+
+# Input file path and parameters
+```{r}
+# Folder path for the seed oligomer table. Use "/" instead of "\".
+batch_path <- "D:/Oligomer-Finder/Seed oligomer batch.xlsx"
+# Folder path for the MS1 peak table. 
+peak_table_path <- "D:/Oligomer-Finder/MS1 peaktable/sample peak table.txt"
+# Folder path for the process blank peak table. 
+BK_path <- "D:/Oligomer-Finder/MS1 peaktable/BK.txt"
+
+ppm <- 1e-6       # Global variable
+filter <- 0       # Whether to select the deduction blank. 1 for Yes and 0 for NO.
+# The parameters of deducting blanks
+RT_diff <- 0.5    # RT tolerance (min)
+mz_diff <- 0.001  # mz tolerance (Da)
+proportion <- 0.3 # Signal intensity proportion cut off
+# # MS data collection mode
+Mode <- "negative"
+
+# Data path for the homemade end group database.
+End_group_database_path <- "D:/Oligomer-Finder/End group database.xlsx"
+# The parameters of homologues analysis
+mass.error1 <- 5 * ppm  # The mass tolerence of MS instrument
+mass.error2 <- 20 * ppm # The mass tolerence of the NL in "seed oligomer"
+
+# The store path of Homologue-Finder result 
+save_path <- "D:/Oligomer-Finder/"
+```
+
+# Deducting Blank # This step requires a long operation time
+```{r}
+Peak_Table_Filter <- function(BK_path,peak.table,RT_diff,mz_diff,proportion){
+    bk.table <- read.table(BK_path, sep = ",")
+    bk.table <- separate(data = bk.table, 
+                         col = 1, into = c("PeakID", "Title","Scans",
+                                           "RT left(min)",
+                                           "RT (min)", "RT right (min)",
+                                           "Precursor m/z","Height", "Area",
+                                           "Model masses",
+                                           "Adduct","Isotope","Comment", 
+                                           "Reference RT", "Reference m/z"),
+                         sep = "\t") 
+    bk.table <- bk.table[, -which(names(bk.table) %in% c("Title","RT left(min)", "RT right (min)","Model masses", "Isotope","Comment", "Reference RT", "Reference m/z"))]
+    bk.table<- bk.table[-1, ]
+    peak.table[, 1:6] <- apply(peak.table[, 1:6], 2, function(x) ifelse(is.na(as.numeric(x)), x, as.numeric(x)))
+    peak.table[, ncol(data)] <- as.character(peak.table[, ncol(peak.table)])
+    bk.table[, 1:6] <- apply(bk.table[, 1:6], 2, function(x) ifelse(is.na(as.numeric(x)), x, as.numeric(x)))
+    bk.table[, ncol(bk.table)] <- as.character(bk.table[, ncol(bk.table)])
+    I <- c()
+    for(i in 1:nrow(peak.table)){
+        for (j in 1:nrow(bk.table)) {
+            mz.diff <- abs(peak.table$"Precursor m/z"[i] - bk.table$"Precursor m/z"[j])
+            if (mz.diff <= mz_diff) {
+                RT.diff <- abs(peak.table$"RT (min)"[i] - bk.table$"RT (min)"[j])
+                if (RT.diff <= RT_diff) {
+                    proportion.cal <- as.numeric(peak.table$"Area"[i]) / as.numeric(bk.table$"Area"[j])
+                    if (proportion.cal <= proportion) {
+                        I <- c(I,i)
+                    }
+                }
+            }
+        }
+    }
+    peak.table <-peak.table[-I,]
+    return (peak.table)
+}
+```
+
+# The mass of the lost groups obtained was calculated which was used for subsequent calculations of the mass of the precursers
+```{r}
+Get_Adduct_Mass <- function(Mode, Adduct){
+    if(Mode == "negative"){
+        if (Adduct== "[M-H]-") {
+            Z <- -1.0072766
+        } 
+        else if (Adduct == "[M+H2O-H]-") {
+            Z <- 17.0032881
+        } 
+        else if (Adduct == "[M+Cl]-") {
+            Z <- 33.9615761
+        }
+        else if (Adduct == "[M+FA-H]-") {
+            Z <- 44.9982027
+        } 
+        else if (Adduct == "[M+Hac-H]-") {
+            Z <- 59.0138527
+        }
+        else if (Adduct == "[M-2H]2-") {
+            Z <- -2.0145532
+        }
+        else {
+            Z <- 0
+        }
+    }
+    if(Mode == "positive"){
+        if (Adduct== "[M+H]+"){
+            Z <- 1.0072767
+        }
+        else if (Adduct == "[M+Na]+") {
+            Z <- 22.9892213
+        }
+        else if (Adduct == "[M+K]+") {
+            Z <- 38.9631585
+        } 
+        else if (Adduct == "[M+H-H2O]+") {
+            Z <- -17.0021912
+        } 
+        else if (Adduct == "[M+ACN+H]+") {
+            Z <- 42.0338258
+        }
+        else if (Adduct == "[M+CH3OH+H]+") {
+            Z <- 33.0334914
+        }
+        else if (Adduct == "[M+NH4]+") {
+            Z <- 19.0416508
+        }
+        else if (Adduct == "[M+2H]2+") {
+            Z <- 2.0145533
+        }
+        else {
+            Z <- 0
+        }
+    }
+    return (Z)
+}
+```
+
+# Calculate mass of precursors in MS1 peak table
+```{r}
+Calculate_Mass <- function(Mode,Adduct,peak.table){
+  Mass<-c()
+  for (i in 1:nrow(peak.table)) {
+      Precursor <- peak.table$"Precursor m/z"[i]
+      Adduct <- peak.table$"Adduct"[i]
+      Charge <- sub(".*\\](.)", "\\1", Adduct)
+      Charge <- substring(Charge, 1, 1)
+      if (Charge=="+"|Charge=="-") {
+          Charge <- 1
+      }
+      Z <- Get_Adduct_Mass(Mode,Adduct)
+      Precursor <- as.numeric(Precursor)
+      Charge <- as.numeric(Charge)
+      mass <- Precursor*Charge-Z
+      Mass <- rbind(Mass,mass)
+  }
+  return (Mass)
+}
+```
+
+# Determine whether each precursor belong to the seed oigomer's congener
+```{r}
+Calculate_Congener <- function(peak.table, batch_row, Differ, mass.error1, mass.error2){
+    N <- nrow(peak.table)
+    congener.table <- matrix(,nrow = N)
+    for (k in 1:nrow(Differ)) {
+        differ <- Differ[k,"EG.mass"]
+        congener <- c()
+        DP <-c()
+        # Note 1 if it is determined to be a congener, 0 for not.
+        for (j in 1:N) {
+            if (is.na(batch[batch_row, "Reference_NL"])) {
+                NL <- batch[batch_row, "NL"]
+                b <- NL * round( (peak.table$"Mass"[j]-differ)/ NL) + differ
+                c <- abs((b - peak.table$"Mass"[j]) / b)
+                if (c < mass.error2) {
+                    candidate <- 1
+                } 
+                else {
+                    candidate <- 0
+                }
+                }
+            else {
+                NL <- batch[batch_row,"Reference_NL"]  
+                b <- NL * round( (peak.table$"Mass"[j]-differ)/ NL) + differ
+                c <- abs((b - peak.table$"Mass"[j]) / b)
+                if (c < mass.error1) {
+                    candidate <- 1
+                } 
+                else {
+                    candidate <- 0
+                }
+                }
+            congener <- rbind(congener, candidate)
+        }
+        congener.table<-cbind(congener.table,congener)
+    }
+    congener.table <- congener.table[,-1]
+    Differ.formula <- Differ$"EG.formula"
+    Differ.formula <- paste("EG", Differ.formula, sep = ".")
+    colnames(congener.table) <- Differ.formula
+    return (congener.table)
+}
+```
+
+# The labeling results of congener and the structural identification  of the oligomer are integrated
+```{r}
+Calculate_Result <- function(peak.table,congener.table,Differ){
+     if (is.na(batch[batch_row, "Reference_NL"])) {
+        NL <- batch[batch_row, "NL"]
+    }else{
+        NL <- batch[batch_row,"Reference_NL"]  
+    }
+    peak_table <- peak.table
+    rownames(peak_table) <- 1:nrow(peak_table)
+    rownames(congener.table) <- 1:nrow(congener.table)
+    result <- cbind(peak_table,NL,Monomer,congener.table)
+    result <- result[rowSums(result[, (ncol(result)-as.numeric(nrow(Differ))+1):ncol(result)]) != 0,]
+    rownames(result) <- 1:nrow(result)
+    result$"DP" <- 2
+    M <- nrow(result)
+    N <- nrow(Differ)
+    for (i in 1:M){
+       for (j in 1:N){
+        J <- j + 10
+      if (result[i,J] == 1){
+        result$DP[i]<- round((result$Mass[i]-Differ$EG.mass[j])/result$NL[i])
+      }
+        }
+    }
+    result <- result[as.numeric(result$DP) >= 2, ]
+    result <- result[c(1:9, ncol(result), 10:(ncol(result)-1))]
+    return (result)
+}
+```
+
+# Main program: calculation and output
+```{r}
+batch<- read_excel(batch_path)
+Differ <- read_excel(End_group_database_path)
+peak.table <- read.table(peak_table_path,sep = ",", quote = "")
+peak.table<-separate(data = peak.table, col = 1, into = c("PeakID", "Title", "Scans", "RT left(min)", "RT (min)", "RT right (min)", "Precursor m/z", "Height", "Area", "Model masses", "Adduct", "Isotope", "Comment", "Reference RT", "Reference m/z"), sep = "\t") 
+peak.table <- peak.table[-1, ]
+peak.table<- peak.table[, -which(names(peak.table) %in% c("Title","RT left(min)", "RT right (min)","Model masses", "Isotope", "Comment", "Reference RT", "Reference m/z"))]
+if(filter==1) {
+  peak.table <- Peak_Table_Filter(BK_path,peak.table,RT_diff,mz_diff,proportion)
+}
+Mass <- Calculate_Mass(Mode,Adduct,peak.table)
+peak.table$"Mass" <- as.numeric(Mass)
+Differ <- read_excel(End_group_database_path)
+for (batch_row in 1:nrow(batch)) {
+    Monomer <- batch[batch_row,"Monomer"]
+    congener.table <- Calculate_Congener(peak.table, batch_row, Differ,mass.error1, mass.error2)
+    result <- Calculate_Result(peak.table,congener.table,Differ)
+     if (is.na(batch[batch_row, "Reference_NL"])) {
+        NL <- batch[batch_row, "NL"]
+    }
+    else{
+        NL <- batch[batch_row,"Reference_NL"]  
+    }
+    NL_name <- round(NL)
+    filename <- paste0("NL_", NL_name, "_congener_output.csv")
+    write.csv(result,file = file.path(save_path,filename),row.names = FALSE)
+}
+```
+
+

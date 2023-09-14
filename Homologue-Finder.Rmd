@@ -1,0 +1,424 @@
+---
+#########################################
+# This script is for screening homologues in MS.
+# Changzhi Shi, Aug 27, 2023
+# Copyright @ Fudan University
+
+#########################################
+---
+
+# Load packages
+```{r}
+library(readxl)
+library(tidyr)
+library(dplyr)
+library (timeDate)
+library(tidyverse)
+```
+
+# Input file path and parameters
+```{r}
+# Folder path for the seed oligomer table. Use "/" instead of "\".
+batch_path <- "D:/Oligomer-Finder/Seed oligomer batch.xlsx"
+# Folder path for the MS1 peak table. 
+peak_table_path <- "D:/Oligomer-Finder/MS1 peaktable/sample peak table.txt"
+# Folder path for the process blank peak table. 
+BK_path <- "D:/Oligomer-Finder/MS1 peaktable/BK.txt"
+
+ppm <- 1e-6       # Global variable.
+
+filter <- 1       # Whether to select the deduction blank. 1 for Yes and 0 for NO.
+# The parameters of deducting blanks.
+RT_diff <- 0.5    # RT tolerance (min).
+mz_diff <- 0.001  # mz tolerance (Da).
+proportion <- 0.3 # Signal intensity proportion cut off
+# MS data collection mode.
+Mode <- "negative"
+
+# The parameters of homologues and RT analysis.
+mass.error1 <- 5 * ppm  # The mass tolerence of MS instrument.
+mass.error2 <- 20 * ppm # The mass tolerence of the NL in "seed oligomer".
+RTmin <- 2     
+RTmax <- 20    # LC gradient time range.
+RTlim <- 0.01  # The cutoff of the LC gradient that is initially unstable.
+
+Annotate <- 1    #Whether to select the annotate CurlySMILES. 1 for Yes and 0 for NO.
+# Data path for the homemade oligomer database. 
+oligomer_database_path <- "D:/Oligomer-Finder/Oligomer database.xlsx"
+# The store path of Homologue-Finder result. 
+save_path <- "D:/Oligomer-Finder/"
+```
+
+# Deducting Blank # This step requires a long operation time
+```{r}
+Peak_Table_Filter <- function(BK_path,filter,peak.table,RT_diff,mz_diff,proportion){
+    bk.table <- read.table(BK_path, sep = ",")
+    bk.table <- separate(data = bk.table, 
+                         col = 1, into = c("PeakID", "Title","Scans",
+                                           "RT left(min)",
+                                           "RT (min)", "RT right (min)",
+                                           "Precursor m/z","Height", "Area",
+                                           "Model masses",
+                                           "Adduct","Isotope","Comment", 
+                                           "Reference RT", "Reference m/z"),
+                         sep = "\t") 
+    bk.table <- bk.table[, -which(names(bk.table) %in% c("Title","RT left(min)", "RT right (min)","Model masses", "Isotope",
+                                                         "Comment", "Reference RT", "Reference m/z"))]
+    bk.table<- bk.table[-1, ]
+    peak.table[, 1:6] <- apply(peak.table[, 1:6], 2, function(x) ifelse(is.na(as.numeric(x)), x, as.numeric(x)))
+    peak.table[, ncol(data)] <- as.character(peak.table[, ncol(peak.table)])
+    bk.table[, 1:6] <- apply(bk.table[, 1:6], 2, function(x) ifelse(is.na(as.numeric(x)), x, as.numeric(x)))
+    bk.table[, ncol(bk.table)] <- as.character(bk.table[, ncol(bk.table)])
+    I <- c()
+    for(i in 1:nrow(peak.table)){
+        for (j in 1:nrow(bk.table)) {
+            mz.diff <- abs(peak.table$"Precursor m/z"[i] - bk.table$"Precursor m/z"[j])
+            if (mz.diff <= mz_diff) {
+                RT.diff <- abs(peak.table$"RT (min)"[i] - bk.table$"RT (min)"[j])
+                if (RT.diff <= RT_diff) {
+                    proportion.cal <- as.numeric(peak.table$"Area"[i]) / as.numeric(bk.table$"Area"[j])
+                    if (proportion.cal <= proportion) {
+                        I <- c(I,i)
+                    }
+                }
+            }
+        }
+    }
+    peak.table <-peak.table[-I,]
+    return (peak.table)
+}
+  
+```
+
+# The mass of the lost groups obtained was calculated which was used for subsequent calculations of the mass of the precursers
+```{r}
+Get_Adduct_Mass <- function(Mode, Adduct){
+    if(Mode == "negative"){
+        if (Adduct== "[M-H]-") {
+            Z <- -1.0072766
+        } 
+        else if (Adduct == "[M+H2O-H]-") {
+            Z <- 17.0032881
+        } 
+        else if (Adduct == "[M+Cl]-") {
+            Z <- 33.9615761
+        }
+        else if (Adduct == "[M+FA-H]-") {
+            Z <- 44.9982027
+        } 
+        else if (Adduct == "[M+Hac-H]-") {
+            Z <- 59.0138527
+        }
+        else if (Adduct == "[M-2H]2-") {
+            Z <- -2.0145532
+        }
+        else {
+            Z <- 0
+        }
+    }
+    if(Mode == "positive"){
+        if (Adduct== "[M+H]+"){
+            Z <- 1.0072767
+        }
+        else if (Adduct == "[M+Na]+") {
+            Z <- 22.9892213
+        }
+        else if (Adduct == "[M+K]+") {
+            Z <- 38.9631585
+        } 
+        else if (Adduct == "[M+H-H2O]+") {
+            Z <- -17.0021912
+        } 
+        else if (Adduct == "[M+ACN+H]+") {
+            Z <- 42.0338258
+        }
+        else if (Adduct == "[M+CH3OH+H]+") {
+            Z <- 33.0334914
+        }
+        else if (Adduct == "[M+NH4]+") {
+            Z <- 19.0416508
+        }
+        else if (Adduct == "[M+2H]2+") {
+            Z <- 2.0145533
+        }
+        else {
+            Z <- 0
+        }
+    }
+    return (Z)
+}
+```
+
+# Calculate mass of precursors in MS1 peak table
+```{r}
+Calculate_Mass <- function(Mode,peak.table){
+  Mass<-c()
+  for (i in 1:nrow(peak.table)) {
+      Precursor <- peak.table$"Precursor m/z"[i]
+      Adduct <- peak.table$"Adduct"[i]
+      Charge <- sub(".*\\](.)", "\\1", Adduct)
+      Charge <- substring(Charge, 1, 1)
+      if (Charge=="+"|Charge=="-") {
+          Charge <- 1
+      }
+      Z <- Get_Adduct_Mass(Mode,Adduct)
+      Precursor <- as.numeric(Precursor)
+      Charge <- as.numeric(Charge)
+      mass <- Precursor*Charge-Z
+      Mass <- rbind(Mass,mass)
+  }
+  return (Mass)
+}
+```
+
+# Determine whether each precursor belong to the seed oigomer's homologue
+```{r}
+Calculate_Homologue <- function(batch, i, peak.table, NL, mass.error1, mass.error2){
+  homologue <- c()
+  precursor.mz <- as.numeric(peak.table$"Precursor m/z")
+  N <- length(precursor.mz)
+  base.precursor <- batch[i,"Precursor"]
+  if (!is.na(batch[i, "Reference_NL"])) {
+        if(!is.na(batch[i,"Reference_Precursor"])) { 
+            base.precursor <- batch[i,"Reference_Precursor"]
+            } 
+        precursor.differ <- base.precursor %% NL
+        for (j in 1:N) {
+            b <- NL * round( (precursor.mz[j]- precursor.differ) / NL) + precursor.differ
+            c <- abs((b - precursor.mz[j]) / b)
+            # Note 1 if it is determined to be a homologue, 0 for not.
+            if (c < mass.error1) {
+                candidate <- 1
+            } 
+            else {
+                candidate <- 0
+            }
+            homologue <- rbind(homologue, candidate)
+        }
+    }
+    else {
+        for (j in 1:N) {
+              a <- abs(precursor.mz[j] - base.precursor)
+              #  Seed oligomer contained in its homologues    
+              if (a <=  mass.error1 * 200) {
+                  candidate <- 1
+              }
+              else {
+                  b <- abs(1 - a / (NL * round(a / NL)))
+                  if (b < mass.error2) {
+                      candidate <- 1
+                  } 
+                  else {
+                      candidate <- 0
+                  }
+                  
+              }
+        homologue <- rbind(homologue, candidate)
+      }
+    }
+  return (homologue)
+}
+```
+
+# The labeling results of homologue and the structural identification  of the oligomer were integrated
+```{r}
+Calculate_Peak_Table <- function(peak.table,homologue,NL,Differ){
+    peak_table <- peak.table
+    peak_table$"homologue" <- homologue
+    peak_table <- peak_table[peak_table$"homologue" == 1, ]
+    row.names(peak_table) <- 1:nrow(peak_table)
+    NL <- as.numeric(NL)
+    Differ <- as.numeric(Differ)
+    peak_table$"Count" <- round((peak_table$"mass"-Differ)/NL)
+    return (peak_table)
+}
+```
+
+# Predict the retention time of homologues
+```{r}
+Calculate_PredictRT <- function(batch, i, mass.error1, mass.error2, peak.table, RTmin, RTmax, RTlim){
+    precursor.mz <- as.numeric(peak.table$"Precursor m/z")
+    N <- length(precursor.mz)
+    base.precursor <- batch[i,"Precursor"]
+    if (!is.na(batch[i, "Reference_NL"])){
+        NL <- as.numeric(batch[i,"Reference_NL"])
+    } else{
+        NL <- batch[i,"NL"]
+    }
+    RT1 <- batch[i,"RT"]
+    # The point 1 of seed oligomer in ln(DP)~RT curve
+    N1 <- round(base.precursor/NL)
+    N1 <- as.numeric(N1)
+    n1 <- log(N1)
+    Monomer <- batch[i,"Monomer"]
+    if (!is.na(batch[i, "Reference_Differ"])){
+        Differ <- as.numeric(batch[i,"Reference_Differ"])
+    } else{
+        Differ <- batch[i,"Differ"]
+    }
+    homologue <- c()
+    PredictRT <- c()
+    homologue <- Calculate_Homologue(batch,i,peak.table,NL,mass.error1,mass.error2)
+    peak_table <- Calculate_Peak_Table(peak.table,homologue,NL,Differ_Pre)
+    precursor_mz <- as.numeric(peak_table$"Precursor m/z")
+    # The point 2 selected for fitting in ln(DP)~RT curve
+    RTlim <- RTmin + (RTmax - RTmin) * RTlim
+    A <- peak_table
+    A$"original_row" <- 1:nrow(A)
+    names(A)[names(A) == "RT (min)"] <- "RT"
+    A[] <- lapply(A, as.numeric)
+    A <- filter(A,Count > 2 & RT >= RTlim & RT <= RTmax)
+    if (nrow(A) == 0){
+        N2 <- N1
+        RT2 <- RT1
+    }
+    else {
+      B <- abs(A$"Count" - N1)
+      A_index <- which(B == max(B))
+      B_index <- which.max(A$"Area"[A_index])
+      max_index <- A$"original_row"[A_index[B_index]]
+      N2 <- peak_table$"Count" [max_index]
+      RT2 <- peak_table$"RT (min)" [max_index]
+    }
+    n2 <- log(N2)
+    # Fit the ln(DP)~RT curve
+    x <- c(n1,n2)
+    y <- c(RT1,RT2)
+    x <- as.numeric(x)
+    y <- as.numeric(y)
+    fit <- lm(y ~ x)
+    PreRT <- c()
+    for(j in 1:nrow(peak_table)) {
+        n <- round(precursor_mz[j]/NL)
+        m <- log(n)
+        PreRT <- predict(fit, newdata = data.frame(x = m))
+        PredictRT <- cbind(PredictRT,PreRT)
+    }
+    data_transposed <- t(PredictRT)
+    PredictRT_result <- cbind(peak_table,data_transposed,NL,Monomer,Differ_Pre)
+    names(PredictRT_result)[11] <- "PredictRT (min)"
+    names(PredictRT_result)[8] <- "Mass"
+    names(PredictRT_result)[9] <- "homologue"
+    names(PredictRT_result)[10] <- "DP"
+    names(PredictRT_result)[14] <- "Differ"
+    PredictRT_result <- select(PredictRT_result,-homologue)
+    return (PredictRT_result)
+}
+```
+
+# Annotate the homologues by CurlySMILES
+```{r}
+Calculate_Annotation <- function(PredictRT,oligomer_database_path){
+    input_a <- read_excel(oligomer_database_path)
+    End_group_database <- input_a [, c("Differ mass","Differ formula","Differ SMILES")]
+    End_group_database <- End_group_database[!duplicated(End_group_database$"Differ mass"), ]
+    input_b <- PredictRT
+    # Annotate the formula
+    input_b $"RU" <- unlist(lapply(1:nrow(input_b), function(i) {
+    match_row <- which(input_a$"NL mass" == input_b$"NL"[i])
+    if (length(match_row) > 0) {
+        return(input_a$"NL formula"[match_row[1]])
+    } 
+    else {
+        return(NA)
+    }
+    }))
+    input_B <- as.data.frame(input_b$"NL")
+    colnames(input_B) <- c("NL")
+    input_C <- as.data.frame(input_b$"Differ")
+    colnames(input_C) <- c("Differ")
+    data3 <- unique(input_C) 
+    End_group_data <- merge(data3, End_group_database,by.x = "Differ",by.y = "Differ mass")
+    input_b$"Need" <- 1
+    # Annotate the NL
+    data1 <- unique(input_a)
+    data2 <- unique(input_B)
+    new_data <- merge(data1,data2,by.x = "NL mass", by.y = "NL")
+    df <- new_data
+    save_data <- data.frame(matrix(ncol = dim(new_data)[1]*2+1, nrow = dim(new_data)[1]))
+    row_no = 1
+    colnames(save_data)[1] <- "NL" 
+    for(i in data2$"NL") {
+        save_data[row_no,1] <- i
+        col_no = 2
+        for (j in 1:dim(df)[1]) {
+            if(df[j,1] == i) {
+                colnames(save_data)[col_no] <- paste("Name.",col_no/2,sep = "")
+                colnames(save_data)[col_no+1] <- paste("SMILES.",col_no/2,sep = "")
+                save_data[row_no,col_no] <- df$NAMES[j]
+                save_data[row_no,col_no+1] <- df$CurlySMILES[j]
+                col_no = col_no+2
+            }
+        }
+        row_no = row_no+1
+    }
+    removeColsAllNa  <- function(x){x[, apply(x, 2, function(y) any(!is.na(y)))]} 
+    save_data <- removeColsAllNa(save_data)
+    idx <- is.na(save_data[, 1]) | save_data[, 1] == ""
+    save_data <- save_data[!idx, ]
+    annotation <- merge(input_b,save_data)
+    End_group_data$"Differ" <- as.numeric(End_group_data$"Differ")
+    annotation <- merge(annotation,End_group_data)
+    cols_to_replace <- grep("SMILES", colnames(annotation))
+    # Annotate the DP
+    for (i in cols_to_replace[]) {
+        for (j in 1:nrow(annotation)) {
+            DP <- annotation$DP[j]
+            Differ_SMILES <- annotation$"Differ SMILES"[j]
+            annotation [j,i] <- gsub("n",DP,annotation[j,i])
+            annotation [j,i] <- paste(annotation [j,i], Differ_SMILES, sep = ". ")
+        }
+    }
+    annotation <- annotation[,!names(annotation) %in% c("Need","Differ SMILES","Differ formula")]
+    A<-annotation
+    # Collate all results
+    annotation <- cbind(annotation[, 3:10], annotation[, 1:2],annotation[, 14], annotation[, 13], annotation[, 11], 
+                        annotation[, 12], annotation[, 15:ncol(annotation)])
+   colnames(annotation)[11] <- "RU" 
+   colnames(annotation)[12] <- "Monomer"
+   colnames(annotation)[13] <- "DP"
+   colnames(annotation)[14] <- "Predicted RT"
+   condition1 <- annotation$DP != 1
+   annotation <- annotation[condition1, ]
+   return (annotation)
+}
+```
+
+# Main program: calculation and output
+```{r}
+peak.table <- read.table(peak_table_path,sep = ",", quote = "")
+peak.table<-separate(data = peak.table, col = 1, into = c("PeakID", "Title", "Scans", "RT left(min)", "RT (min)", "RT right (min)", "Precursor m/z", "Height", "Area", "Model masses", "Adduct", "Isotope", "Comment", "Reference RT", "Reference m/z"), sep = "\t") 
+peak.table <- peak.table[-1, ]
+peak.table<- peak.table[, -which(names(peak.table) %in% c("Title","RT left(min)", "RT right (min)","Model masses", "Isotope", "Comment", "Reference RT", "Reference m/z"))]
+if (filter == 1){
+  peak.table <- Peak_Table_Filter(BK_path,filter,peak.table,RT_diff,mz_diff,proportion)
+}
+Mass <- Calculate_Mass(Mode,peak.table)
+peak.table$"mass"<- Mass
+batch <- read_excel(batch_path)
+for (i in 1:nrow(batch))  {
+    base.precursor <- batch[i,"Precursor"]
+    if (!is.na(batch[i, "Reference_NL"])){
+        NL <- as.numeric(batch[i,"Reference_NL"])
+    } else{
+        NL <- batch[i,"NL"]
+    }
+    if (!is.na(batch[i, "Reference_Differ"])){
+        Differ <- as.numeric(batch[i,"Reference_Differ"])
+    } else{
+        Differ <- batch[i,"Differ"]
+    }
+    PredictRT <- Calculate_PredictRT(batch, i, mass.error1, mass.error2, peak.table,RTmin, RTmax, RTlim)
+    result <- PredictRT
+    if(Annotate == 1)
+    {
+    annotation <- Calculate_Annotation(PredictRT,oligomer_database_path)
+    result <- annotation
+    }
+    NL_name <- round(NL)
+    precursor_name <- round(base.precursor)
+    differ_name <- round(Differ)
+    filename <- paste0("NL_", NL_name,"_Differ_",differ_name,"_Precursor_", precursor_name,"_homologue_output.csv")
+    write.csv(result,file = file.path(save_path,filename),row.names = FALSE)
+}
+```
