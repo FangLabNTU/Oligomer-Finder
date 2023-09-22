@@ -291,7 +291,7 @@ candidate <- Get_Candidate(csv_files,folder_path,Mode)
 # 
 NL_filtered <- NL_Filter(candidate,RTmin,RTmax,NLmin)
 # Acquisition of oligomer related information
-NL_filtered$"DP" <- round(NL_filtered$"Mass"/NL_filtered$"NL")
+NL_filtered$"DP" <- floor(NL_filtered$"Mass"/NL_filtered$"NL")
 NL_filtered$"Monomer" <- NL_filtered$"Mass" %% NL_filtered$"NL" + NL_filtered$"NL"
 NL_filtered$"Monomer" <- round(NL_filtered$"Monomer",Round_Differ)
 NL_filtered$"Differ" <- round(NL_filtered$"Mass" %% NL_filtered$"NL",Round_Differ)
