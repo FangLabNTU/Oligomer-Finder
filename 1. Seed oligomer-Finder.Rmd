@@ -1,0 +1,312 @@
+---
+#########################################
+# This script is for screening seed oligomer in MS/MS.
+# Changzhi Shi, Aug 27, 2023
+# Copyright @ Fudan University
+
+#########################################
+---
+
+# Load packages
+```{r}
+library(tidyverse)
+library(stringr)
+library (timeDate)
+library(openxlsx)
+library(readxl)
+```
+
+# Input file path and parameters
+```{r}
+Mode <- "negative"  # MS data collection mode
+minint <- 0.01      # Minimum relative abundance of product ion
+RTmin <- 2          
+RTmax <- 18         # LC gradient time range
+NLmin <- 28         # The minimum Da of NL retained in the results
+Round_NL <- 2       # Keep the number of decimal digits NL is calculated
+Round_Differ <- 1  # Keep the number of decimal digits differ is calculated
+ppm <- 1e-6         # Global variable
+# Folder path for the MS2 peak spots data name ending with ".mat". Use "/" instead of "\".
+folder_path <- "D:/Oligomer-Finder/MS2 peak spots" 
+# Whether to select the oligomer matching. 1 for Yes and 0 for NO.
+Databasematching <- 1
+# Data path for the homemade oligomer database. 
+database_path <- "D:/Oligomer-Finder/Oligomer database.xlsx"
+# The store path of Seed oligomer-Finder result. Note: Do not store in the same location as the MS2 file
+save_path <- "D:/Oligomer-Finder/seed oligomer candidate.csv"
+```
+
+# Change MS/MS data name ending from ".mat" to ".csv".
+```{r}
+Convert_Files <- function(foloder_path){
+files <- list.files(folder_path)
+for (f in files) {
+    old_name <- file.path(folder_path,f)
+    new_name <- file.path(folder_path, sub('.mat','.csv',f))
+    file.rename(old_name,new_name)
+    }
+}
+
+Convert_Files(folder_path)
+```
+
+# Get the precurser information from each MS/MS data.
+```{r}
+Get_Basic_Info <- function(Msp){
+  Scannum <- str_sub(Msp[1,1],13,-1)
+  PeakID <- str_sub(Msp[2,1],9,-1)
+  Precursor <- str_sub(Msp[4,1],14,-1)
+  RT <- str_sub(Msp[3,1],16,-1)
+  Adduct <- str_sub(Msp[5,1],16,-1)
+  Charge <- sub(".*\\](.)", "\\1", Adduct)
+  Charge <- substring(Charge, 1, 1)
+  if (Charge == "+" | Charge == "-") {
+      Charge <- 1
+  }
+  output <- data.frame(Scannum, PeakID, Precursor, RT, Adduct, Charge)
+  return (output)
+}
+```
+
+# The mass of the lost groups obtained was calculated which was used for subsequent calculations of the mass of the precursers
+```{r}
+Get_Adduct_Mass <- function(Mode,Adduct) {
+   if(Mode == "negative") {
+      if (Adduct == "[M-H]-") {
+          Z <- -1.0072766
+      } 
+      else if (Adduct == "[M+H2O-H]-") {
+          Z <- 17.0032881
+      } 
+      else if (Adduct == "[M+Cl]-") {
+          Z <- 33.9615761
+      } 
+      else if (Adduct == "[M+FA-H]-") {
+          Z <- 44.9982027
+      } 
+      else if (Adduct == "[M+Hac-H]-") {
+          Z <- 59.0138527
+      } 
+      else if (Adduct == "[M-2H]2-") {
+          Z <- -2.0145532
+      }
+      else {
+          Z <- 0
+      }
+   }
+  
+   if(Mode == "positive") {
+      if (Adduct == "[M+H]+") {
+          Z <- 1.0072767
+      }
+      else if (Adduct == "[M+Na]+") {
+          Z <- 22.9892213
+      } 
+      else if (Adduct == "[M+K]+") {
+          Z <- 38.9631585
+      } 
+      else if (Adduct == "[M+H-H2O]+") {
+          Z <- -17.0021912
+      } 
+      else if (Adduct == "[M+ACN+H]+") {
+          Z <- 42.0338258
+      } 
+      else if (Adduct == "[M+CH3OH+H]+") {
+          Z <- 33.0334914
+      }
+      else if (Adduct == "[M+NH4]+") {
+          Z <- 19.0416508
+      } 
+      else if (Adduct == "[M+2H]2+") {
+          Z <- 2.0145533
+      }
+    else {
+        Z <- 0
+    }
+  }
+  return (Z)
+}
+```
+
+# MS2 spectra are extracted from the original .mat files
+```{r}
+Get_MS2peak <- function(Msp,convert_Msp,Precursor,ppm,minint){
+    MS2peak.table <- convert_Msp[which(Msp == "MSTYPE: MS2") + 2 : nrow(Msp),]
+    MS2peak.table <- na.omit(MS2peak.table) 
+    
+    # The m/z was lower than the precursor
+    maxprecursor_differ <- 1 + 10 * ppm
+    maxprecursor <- Precursor * maxprecursor_differ
+    MS2peak.table$mz <- as.numeric(MS2peak.table$mz)
+    MS2peak.table <- MS2peak.table[MS2peak.table$mz <= maxprecursor, ]
+    intensity <- as.numeric(MS2peak.table$intensity)
+    relative.int = intensity/max(intensity)
+    MS2peak.table <- cbind(MS2peak.table,relative.int)
+    
+    # The relative abundance was higher than the minimum
+    MS2peak.table <- MS2peak.table[MS2peak.table$relative.int >= minint, ]
+    row.names(MS2peak.table) <- 1:nrow(MS2peak.table)
+    return (MS2peak.table)
+}
+```
+
+# Caculate repeated neutral losses (rNL) in MS2 spectrum
+```{r}
+Get_NL_Candidate <- function(MS2peak.table,Round_NL){
+  mz <- as.numeric(MS2peak.table$mz)
+  N <- length(mz)
+  b <- c()
+  if(N == 1) {
+      b <- 0
+  }
+  else {
+      for(i in 1:N) {
+          for (j in i:N) {
+            if (i != j) {
+              a <- abs(mz[i]-mz[j])
+              b <- rbind(b,a)
+            }
+          }
+      }
+  }
+# Decimal places are reserved
+  NL <- round(b,Round_NL)
+  return (NL)
+}
+```
+
+# Obtain all rNL and Count from all MS2 specctra one by one
+```{r}
+Get_Candidate <- function(csv_files,foloder_path,Mode){
+  candidate <- data.frame()
+  for (i in 1:length(csv_files)) {
+      Msp <- read.csv(file.path(folder_path,csv_files[i]))
+      convert_Msp <- separate(data = Msp, col = 1, into = c("mz", "intensity"), sep = "\t") 
+      basic_info <- Get_Basic_Info(Msp)
+      Scannum <- basic_info$Scannum
+      PeakID <-  basic_info$PeakID
+      Precursor <- basic_info$Precursor
+      RT <- basic_info$RT
+      Adduct <- basic_info$Adduct
+      Charge <- basic_info$Charge
+      Z <- Get_Adduct_Mass(Mode,Adduct)
+      # The mass is calculated from the m/z
+      Precursor <- as.numeric(Precursor)
+      Charge <- as.numeric(Charge)
+      Mass <- Precursor * Charge - Z
+      # Skip the ones that did not get MS2
+      ms2no <- convert_Msp[which(Msp == "MSTYPE: MS2") + 1,1]
+      ms2no1 <- sub(".*: ", "", ms2no)
+      if (as.numeric(ms2no1) != 0) {
+          MS2peak.table <- Get_MS2peak(Msp,convert_Msp,Precursor,ppm,minint)
+          NL <- Get_NL_Candidate(MS2peak.table,Round_NL)
+          d <- table(NL)
+          d <- data.frame(d)
+          d[3] <- d[2] / length(NL)
+          # Only NL with the most occurrences was retained, namely rNL
+          e <- d[which(d[3] == max(d[3])),]
+          e <- cbind(PeakID,Scannum,Precursor,RT,Adduct,Charge,Z,Mass,e)
+          if(e$Freq[1] != 1)
+            candidate <- rbind(candidate,e)
+      }
+  }
+  colnames(candidate)[colnames(candidate) == "Freq"] <- "Count"
+  colnames(candidate)[colnames(candidate) == "Freq.1"] <- "Frequency"
+  candidate$"Precursor" <- as.numeric(candidate$"Precursor")
+  candidate$"Mass" <- as.numeric(candidate$"Mass")
+  candidate$"NL" <- as.numeric(as.character(candidate$"NL"))
+  candidate$"RT" <- as.numeric(candidate$"RT")
+  return (candidate)
+}
+```
+
+# Results were filtered according to RT and Count
+```{r}
+NL_Filter <- function(candidate,RTmin,RTmax,NLmin){
+  RT_filtered <- candidate[candidate$RT > RTmin & candidate$RT < RTmax ,]
+  NL_filtered <- RT_filtered[RT_filtered$NL >= NLmin ,]
+  NL_filtered <- NL_filtered[NL_filtered$Count > 1,]
+  row.names(NL_filtered) <- 1 : nrow(NL_filtered)
+  return (NL_filtered)
+}
+```
+
+# POMDB was introduced to annotate and complement the results
+```{r}
+filtered_oligomer_database <- function(NL_filtered,database_path){
+    oligomer.database <- read_excel(database_path)
+    # Adjust the number of decimal places for match
+    oligomer.database $ "NL" <- round(oligomer.database $ "NL mass", Round_NL)
+    oligomer.database $ "Monomer" <- round(oligomer.database $ "Monomer mass", Round_Differ)
+    oligomer.database $ "Differ" <- round(oligomer.database $ "Differ mass", Round_Differ)
+    # Annotate formula of repeat unit
+    NL_filtered $"RU" <- unlist(lapply(1:nrow(NL_filtered), function(i) {
+    match_row <- which(oligomer.database$"NL" == NL_filtered$"NL"[i])
+    if (length(match_row) > 0) {
+        return(oligomer.database$"NL formula"[match_row[1]])
+    } 
+    else {
+        return(NA)
+    }
+    }))
+    NL_filtered$"NLpredict" <- unlist(lapply(1:nrow(NL_filtered), function(i) {
+    match_row <- which(oligomer.database$NL == NL_filtered$NL[i])
+    if (length(match_row) > 0) {
+        return(oligomer.database$"NL mass"[match_row[1]])
+    } 
+    else {
+        return(NA)
+    }
+    }))
+  # Annotate NL in POMDB
+  NL_filtered$Lib_NL <- lapply(NL_filtered$NL, function(x) as.numeric(x %in% oligomer.database$NL))
+  NL_filtered$Lib_NL <- as.numeric(NL_filtered$Lib_NL)
+  # Annotate monomer in POMDB
+  NL_filtered$Lib_monomer <- lapply(NL_filtered$Monomer, function(x) as.numeric(x %in% oligomer.database$Monomer[oligomer.database$NL %in% NL_filtered$NL]))
+  NL_filtered$Lib_monomer <- as.numeric(NL_filtered$Lib_monomer) 
+  # Annotate end group (differ) in POMDB
+  NL_filtered$Lib_differ <- lapply(NL_filtered$Differ, function(x) as.numeric(x %in% oligomer.database$Differ[oligomer.database$NL %in% NL_filtered$NL]))
+  NL_filtered$Lib_differ <- as.numeric(NL_filtered$Lib_differ)
+  NL_filtered$Differpredict <- unlist(lapply(1:nrow(NL_filtered), function(i) {
+  match_row <- which(oligomer.database$Differ == NL_filtered$Differ[i])
+    if (length(match_row) > 0) {
+        return(oligomer.database$"Differ mass"[match_row[1]])
+    } 
+    else {
+      return(NA)
+    }
+  }))
+# Annotate precursor in POMDB  
+  NL_filtered$Differpredict <-as.numeric(NL_filtered$Differpredict)
+  NL_filtered$"Precursor_predict" <-      (NL_filtered$"NLpredict"*NL_filtered$"DP"+NL_filtered$"Differpredict"+NL_filtered$"Z")/NL_filtered$"Charge"
+  return (NL_filtered)
+}
+```
+
+# Main program
+```{r}
+# Computation part
+csv_files <- list.files(folder_path, pattern = ".csv$" )
+candidate <- Get_Candidate(csv_files,folder_path,Mode)
+# 
+NL_filtered <- NL_Filter(candidate,RTmin,RTmax,NLmin)
+# Acquisition of oligomer related information
+NL_filtered$"DP" <- floor(NL_filtered$"Mass"/NL_filtered$"NL")
+NL_filtered$"Monomer" <- NL_filtered$"Mass" %% NL_filtered$"NL" + NL_filtered$"NL"
+NL_filtered$"Monomer" <- round(NL_filtered$"Monomer",Round_Differ)
+NL_filtered$"Differ" <- round(NL_filtered$"Mass" %% NL_filtered$"NL",Round_Differ)
+result <- NL_filtered
+result <- select(result,-"Z")
+result <- select(result,-"Charge")
+if (Databasematching == 1)
+{result <- filtered_oligomer_database(NL_filtered,database_path)
+result <- select(result,-"Z")
+result <- select(result,-"Charge")
+colnames(result) <-  c("PeakID","Scannum","Precursor","RT (min)","Adduct","Mass","NL","Count","Frequency","DP","Monomer","Differ","RU","Reference_NL","NL_matched","Monomer_matched","Differ_matched","Reference_Differ","Reference_Precursor")
+}
+```
+
+# Output
+```{r}
+write.csv(result,save_path,row.names = FALSE)
+```
