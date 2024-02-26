@@ -1,5 +1,5 @@
 # Oligomer-Finder
-Oligomer-Finder is a program for seed molecule guided oligomers screened and annotation for MS/MS data. 
+Oligomer-Finder is a program for seed molecule guided oligomers screened and annotation for MS/MS data. This project is licensed under the terms of the [MIT License](./LICENSE).
 
 ![Cover](https://github.com/FangLabNTU/Oligomer-Finder/assets/67109373/b4018489-a248-4aa4-9c00-b2003291b166)
 
