@@ -10,10 +10,10 @@ For Oligomer-Finder, we suggest that MS-DIAL software  (http://prime.psc.riken.j
 
 We also provide a homemade polymer oligomer database (171 polymer rNLs included), and an end group database (7 EGs included) (all in xlsx format) to use.  An oligosaccharides database (8 rNLs included) is provided for biological data. Users can modify, add, and delete the databases or develop other types of oligomers of their attention. 
 
-Currently, Oligomer-Finder is accessible either by R.
+Currently, Oligomer-Finder is accessible either by R. A simple version of "Seed oligomer-Finder" module was developed using Python. 
 
 For more details, please refer to the Oligomer-Finder user protocols.
 
-September 2023
+September 2024
 
 FangLab
