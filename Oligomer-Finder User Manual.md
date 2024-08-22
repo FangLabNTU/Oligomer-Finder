@@ -140,7 +140,7 @@ l Mass database 2: **End group database.xlsx** is an open editable oligomer end 
 
 **Acknowledgement**
 
-Oligomer-Finder has been developed by Prof. Minglinag Fang group (Fudan) supported by the project National Key R&D 464 Program (Nos. 2022YFC3702600 and 2022YFC3702601), and Startup Grant of Fudan University (No. JIH 1829010Y). Dr. Mingliang Fang was further supported by Agilent University Relations: ACT-UR Program Grant ID No. 4863 and “Xiaomi” Young Investigator Award.
+This work was sponsored by the National Natural Science Foundation of China (22376032), Strategy Priority Research Program (Category B) of Chinese Academy of Sciences on the New Pollutants, National Key R&D Program (2022YFC3702600 and 2022YFC3702601), and Startup Grant of Fudan University (JIH1829010Y). Dr. Mingliang Fang was further supported by Agilent University Relations: ACT-UR Program and Grant ID #4863 and "Xiaomi" young investigator award.
 
  
 
