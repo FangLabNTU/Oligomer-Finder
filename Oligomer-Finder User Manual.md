@@ -41,13 +41,13 @@ Oligomer-Finder is a program for seed molecule guided oligomers screened and ann
 
 Use the MS2 filter to obtain each MAT file with the MS2 peak spots in a MS RAW file from the MS-Finder export program (**Figure 1**). The TXT file with all MS1 peaks from a MS data can be exported from MS-DIAL (**Figure 2**).
 
-![Figure 1](D:\FDU-FG\Oligomer Finder\Figure 1.png)
+![Figure 1](images/Figure 1.png)
 
 **Figure 1**. The MS2 peak spots files (.mat) exported interface in MS-DIAL. 
 
 
 
-![Figure 2](D:\FDU-FG\Oligomer Finder\Figure 2.png)
+![Figure 2](images/Figure 2.png)
 
 **Figure 2**. The MS1 peak table file (.txt) exported interface in MS-DIAL.
 
@@ -59,7 +59,7 @@ User are advised to create two folders used for respectively to store MS2 peak s
 
    
 
-![Figure 3](D:\FDU-FG\Oligomer Finder\Figure 3.png)
+![Figure 3](images/Figure 3.png)
 
 **Figure 3**. The overall workflow for Oligomer-Finder
 
