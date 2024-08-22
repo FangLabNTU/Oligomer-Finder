@@ -1,6 +1,6 @@
 **Oligomer-Finder User Manual**
 
-（Version 1.1, 2023-09-16）
+（Version 1.2, 2024-08-22）
 
 Changzhi Shi1, Mingliang Fang1*
 
@@ -16,14 +16,13 @@ E-mail: mlfang@ntu.edu.sg
 
  
 
- 
-
 • Oligomer-Finder. R is an R script for seed molecule guided oligomers screened and annotation for MS/MS data. 
 
 •The program is written in the language ‘R’ and is publicly available at https://github.com/FangLab/Oligomer-Finder.git
 
-• Please see below for detailed instructions on using the Oligomer-Finder. R code:
+• A simple version of "Seed oligomer-Finder" module was modified from Oligomer-Finder. R  using Python language and has been uploaded. 
 
+• Please see below for detailed instructions on using the Oligomer-Finder. R code:
  
 
 ##### Introduction
