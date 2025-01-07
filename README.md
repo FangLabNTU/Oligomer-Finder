@@ -36,8 +36,10 @@ Polymers containing heteroatoms in the main chain, such as poly(ethylene terepht
 Oligomer-Finder comprises three modules:
 1. **Seed oligomer-Finder**  
 2. **Homologue-Finder**  
-3. **Congener-Finder**  
+3. **Congener-Finder**
+4. 
 ![Cover](https://github.com/FangLabNTU/Oligomer-Finder/blob/2e448adb76ecc9d4cd593cf0e81d41a384687642/images/Figure%206.png)
+
 All modules are developed in R. A graphical user interface (GUI) version of Oligomer-Finder, developed using [Qt Creator](https://www.qt.io/product/development-tools), is available for enhanced user convenience. A simplified version of the "Seed oligomer-Finder" module is also available in Python (`SeedOligomer-Finder.py`) for screening seed oligomer candidates with varying confidence levels.
 
 ---
@@ -49,13 +51,16 @@ Polymers with a carbon–carbon (C–C) backbone, such as polyethylene (PE), pol
 We proposed a suspect screening framework modified from “Homologue-Finder.” (`Suspect Screening.py`) The functional modules include:
 1. Homologue screening  
 2. Diagnostic NL check (43.9898 Da for di-carboxylic end structure)  
-3. RT prediction  
+3. RT prediction
+    
 ![Cover](https://github.com/FangLabNTU/Oligomer-Finder/blob/2e448adb76ecc9d4cd593cf0e81d41a384687642/images/Figure%207.png)
+
 ---
 
 ## Additional Information
 
-For more details, please refer to the Oligomer-Finder and Suspect Screening user protocols.
+For more details, please refer to the user protocols for Oligomer-Finder and Suspect Screening. These protocols provide comprehensive guidance on using the tools and interpreting results.
+For the complete study, please refer to doi.org/10.21203/rs.3.rs-3997133/v1.
 
 ---
 
