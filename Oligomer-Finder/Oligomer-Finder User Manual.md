@@ -18,7 +18,7 @@ E-mail: mlfang@ntu.edu.sg
 
 • Oligomer-Finder. R is an R script for seed molecule guided oligomers screened and annotation for MS/MS data. 
 
-•The program is written in the language ‘R’ and is publicly available at https://github.com/FangLab/Oligomer-Finder.git
+•The program is written in the language ‘R’ and is publicly available at https://github.com/FangLab/Oligomer-Finder/Oligomer-Finder.git
 
 • A simple version of "Seed oligomer-Finder" module was modified from Oligomer-Finder. R  using Python language and has been uploaded. 
 
@@ -41,13 +41,13 @@ Oligomer-Finder is a program for seed molecule guided oligomers screened and ann
 
 Use the MS2 filter to obtain each MAT file with the MS2 peak spots in a MS RAW file from the MS-Finder export program (**Figure 1**). The TXT file with all MS1 peaks from a MS data can be exported from MS-DIAL (**Figure 2**).
 
-![Figure 1](Oligomer-Finder/images/Figure 1.png)
+![Cover](https://github.com/FangLabNTU/Oligomer-Finder/blob/9c40863ea6cde6743a0b21eb3b2fbc21526178f3/images/Figure%201.png)
 
 **Figure 1**. The MS2 peak spots files (.mat) exported interface in MS-DIAL. 
 
 
 
-![Figure 2](Oligomer-Finder/images/Figure 2.png)
+![Cover](https://github.com/FangLabNTU/Oligomer-Finder/blob/9c40863ea6cde6743a0b21eb3b2fbc21526178f3/images/Figure%202.png)
 
 **Figure 2**. The MS1 peak table file (.txt) exported interface in MS-DIAL.
 
@@ -59,7 +59,7 @@ User are advised to create two folders used for respectively to store MS2 peak s
 
    
 
-![Figure 3](Oligomer-Finder/images/Figure 3.png)
+![Cover](https://github.com/FangLabNTU/Oligomer-Finder/blob/9c40863ea6cde6743a0b21eb3b2fbc21526178f3/images/Figure%203.png)
 
 **Figure 3**. The overall workflow for Oligomer-Finder
 
