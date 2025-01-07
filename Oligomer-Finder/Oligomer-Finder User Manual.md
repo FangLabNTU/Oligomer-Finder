@@ -27,7 +27,7 @@ E-mail: mlfang@ntu.edu.sg
 
 ##### Introduction
 
-An oligomer) is a molecule that consists of a few repeating units. Polymer oligomers are a class of substances widely present in polymers. They are found to be released into food media and the environment due to degradation during the use and disposal of polymer products, which are harmful to human and environmental safety. In addition, bioligomers including oligosaccharides exist in living organisms. The oligomers are complex because of their repeat units, chain length, and modified end groups.
+An oligomer is a molecule that consists of a few repeating units. Polymer oligomers are a class of substances widely present in polymers. They are found to be released into food media and the environment due to degradation during the use and disposal of polymer products, which are harmful to human and environmental safety. In addition, bioligomers including oligosaccharides exist in living organisms. The oligomers are complex because of their repeat units, chain length, and modified end groups.
 
 Oligomer-Finder is a program for seed molecule guided oligomers screened and annotation for MS/MS data. And MS-DIAL (http://prime.psc.riken.jp/compms/msdial/main.html)  was used as a program for MS data first treatment for Oligomer-Finder that supports multiple MS/MS instruments (MALDI-MS/MS, GC/MS/MS and LC/MS/MS) and MS vendors (Agilent, Bruker, Sciex, Shimadzu, Thermo, and Waters). 
 
