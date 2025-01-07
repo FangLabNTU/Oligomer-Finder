@@ -7,8 +7,9 @@ Oligomer-Finder is a program for seed molecule-guided oligomer screening and ann
 ## Polymer Oligomers
 
 The program leverages the structural characteristics of oligomers, particularly polymer oligomers, and their mass spectrometric behavior to facilitate the discovery and identification of oligomers based on Liquid Chromatography-High Resolution Tandem Mass Spectrometry (LC-HRMS/MS) data. This approach categorizes the analysis into two distinct frameworks: Oligomer-Finder, a non-targeted screening workflow, and Suspect Screening, specifically designed for carbon–carbon (C–C) backbone oligomers.
-Oligomer=Repeat unit * Degree of polymerization + End group     
-
+$$
+\text{Oligomer} = \text{Repeat unit} \times \text{Degree of polymerization} + \text{End group}
+$$
 
 We also provide a custom-built polymer oligomer database (PODB), including 171 polymers with their structural identifiers, and an end-group database (OEGDB) containing 7 EGs, both in `.xlsx` format. Users are encouraged to modify, expand, or refine these databases or develop additional types of oligomers based on their specific research interests.
 
@@ -34,7 +35,7 @@ Oligomer-Finder comprises three modules:
 2. **Homologue-Finder**  
 3. **Congener-Finder**  
 
-All modules are developed in R. A graphical user interface (GUI) version of Oligomer-Finder, developed using Qt Creator, is available for enhanced user convenience. A simplified version of the "Seed Oligomer-Finder" module is also available in Python for screening seed oligomer candidates with varying confidence levels.
+All modules are developed in R. A graphical user interface (GUI) version of Oligomer-Finder, developed using Qt Creator, is available for enhanced user convenience. A simplified version of the "Seed Oligomer-Finder" module is also available in Python (`SeedOligomer-Finder.py`) for screening seed oligomer candidates with varying confidence levels.
 
 ---
 
