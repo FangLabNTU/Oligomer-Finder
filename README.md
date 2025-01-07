@@ -37,7 +37,7 @@ Oligomer-Finder comprises three modules:
 1. **Seed oligomer-Finder**  
 2. **Homologue-Finder**  
 3. **Congener-Finder**
-4. 
+
 ![Cover](https://github.com/FangLabNTU/Oligomer-Finder/blob/2e448adb76ecc9d4cd593cf0e81d41a384687642/images/Figure%206.png)
 
 All modules are developed in R. A graphical user interface (GUI) version of Oligomer-Finder, developed using [Qt Creator](https://www.qt.io/product/development-tools), is available for enhanced user convenience. A simplified version of the "Seed oligomer-Finder" module is also available in Python (`SeedOligomer-Finder.py`) for screening seed oligomer candidates with varying confidence levels.
