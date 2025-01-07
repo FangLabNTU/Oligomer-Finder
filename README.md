@@ -8,6 +8,8 @@ Oligomer-Finder is a program for seed molecule-guided oligomer screening and ann
 
 The program leverages the structural characteristics of oligomers, particularly polymer oligomers, and their mass spectrometric behavior to facilitate the discovery and identification of oligomers based on Liquid Chromatography-High Resolution Tandem Mass Spectrometry (LC-HRMS/MS) data. This approach categorizes the analysis into two distinct frameworks: Oligomer-Finder, a non-targeted screening workflow, and Suspect Screening, specifically designed for carbon–carbon (C–C) backbone oligomers.
 
+![Cover](https://github.com/FangLabNTU/Oligomer-Finder/assets/67109373/b4018489-a248-4aa4-9c00-b2003291b166)
+
 Oligomer = Repeat unit * Degree of polymerization + End group
 
 We also provide a custom-built polymer oligomer database (PODB), including 171 polymers with their structural identifiers, and an end-group database (OEGDB) containing 7 EGs, both in `.xlsx` format. Users are encouraged to modify, expand, or refine these databases or develop additional types of oligomers based on their specific research interests.
@@ -30,11 +32,11 @@ Please note that the exported data structures differ between MS-DIAL versions. W
 Polymers containing heteroatoms in the main chain, such as poly(ethylene terephthalate) (PET), polyamides (PA), polylactic acid (PLA), and poly(butylene adipate-co-terephthalate) (PBAT), are expected to degrade into oligomers featuring oxidized end groups, particularly hydroxyl groups. These oligomers exhibit a repeated neutral loss (rNL) pattern in MS/MS analysis, a characteristic that aids in identifying them as oligomers. Additionally, this feature provides structural information about the oligomer, as well as its homologues and congeners, all of which originate from the same parent polymer.
 
 Oligomer-Finder comprises three modules:
-1. **Seed Oligomer-Finder**  
+1. **Seed oligomer-Finder**  
 2. **Homologue-Finder**  
 3. **Congener-Finder**  
 
-All modules are developed in R. A graphical user interface (GUI) version of Oligomer-Finder, developed using Qt Creator, is available for enhanced user convenience. A simplified version of the "Seed Oligomer-Finder" module is also available in Python (`SeedOligomer-Finder.py`) for screening seed oligomer candidates with varying confidence levels.
+All modules are developed in R. A graphical user interface (GUI) version of Oligomer-Finder, developed using [Qt Creator](https://www.qt.io/product/development-tools), is available for enhanced user convenience. A simplified version of the "Seed oligomer-Finder" module is also available in Python (`SeedOligomer-Finder.py`) for screening seed oligomer candidates with varying confidence levels.
 
 ---
 
@@ -42,7 +44,7 @@ All modules are developed in R. A graphical user interface (GUI) version of Olig
 
 Polymers with a carbon–carbon (C–C) backbone, such as polyethylene (PE), polyvinyl chloride (PVC), and polystyrene (PS), are anticipated to degrade into oligomers with di-carboxylic end structures, especially through photoaging processes. The C–C backbone oligomers are challenging to generate a series of fragments using high-energy collision-induced dissociation in LC-MS/MS, making them unsuitable for Oligomer-Finder analysis. 
 
-We proposed a suspect screening framework modified from “Homologue-Finder.” The functional modules include:
+We proposed a suspect screening framework modified from “Homologue-Finder.” (`Suspect Screening.py`) The functional modules include:
 1. Homologue screening  
 2. Diagnostic NL check (43.9898 Da for di-carboxylic end structure)  
 3. RT prediction  
