@@ -21,7 +21,7 @@ We also provide a custom-built polymer oligomer database (PODB), including 171 p
 For all Oligomer-Finder scripts, we recommend using the [MS-DIAL software](http://prime.psc.riken.jp/compms/msdial/main.html) for the preliminary processing of raw MS data. 
 
 - **MS-DIAL 4.6:** The MS2 peak spots (in `.mat` format, with thousands of files for raw MS data stored in a folder) and the MS1 peak table (in `.txt` format, one file per raw MS dataset) exported by MS-DIAL 4.6 are utilized in Oligomer-Finder, including the R and Oligomer_Finder_UI scripts.  
-- **MS-DIAL 5.2:** The MS1 peak table (in `.txt` format) exported by MS-DIAL 5.2 is required for `SeedOligomer-Finder.py` and `SuspectScreening.py`.
+- **MS-DIAL 5.3:** The MS1 peak table (in `.txt` format) exported by MS-DIAL 5.2 is required for `SeedOligomer-Finder.py` and `SuspectScreening.py`.
 
 Please note that the exported data structures differ between MS-DIAL versions. We strongly recommend using the specified software versions or modifying the source code to accommodate the differences. For assistance, please contact the authors.
 
