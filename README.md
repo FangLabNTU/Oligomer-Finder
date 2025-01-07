@@ -7,9 +7,8 @@ Oligomer-Finder is a program for seed molecule-guided oligomer screening and ann
 ## Polymer Oligomers
 
 The program leverages the structural characteristics of oligomers, particularly polymer oligomers, and their mass spectrometric behavior to facilitate the discovery and identification of oligomers based on Liquid Chromatography-High Resolution Tandem Mass Spectrometry (LC-HRMS/MS) data. This approach categorizes the analysis into two distinct frameworks: Oligomer-Finder, a non-targeted screening workflow, and Suspect Screening, specifically designed for carbon–carbon (C–C) backbone oligomers.
-$$
-\text{Oligomer} = \text{Repeat unit} \times \text{Degree of polymerization} + \text{End group}
-$$
+
+Oligomer = Repeat unit * Degree of polymerization + End group
 
 We also provide a custom-built polymer oligomer database (PODB), including 171 polymers with their structural identifiers, and an end-group database (OEGDB) containing 7 EGs, both in `.xlsx` format. Users are encouraged to modify, expand, or refine these databases or develop additional types of oligomers based on their specific research interests.
 
