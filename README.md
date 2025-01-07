@@ -8,7 +8,7 @@ Oligomer-Finder is a program for seed molecule-guided oligomer screening and ann
 
 The program leverages the structural characteristics of oligomers, particularly polymer oligomers, and their mass spectrometric behavior to facilitate the discovery and identification of oligomers based on Liquid Chromatography-High Resolution Tandem Mass Spectrometry (LC-HRMS/MS) data. This approach categorizes the analysis into two distinct frameworks: Oligomer-Finder, a non-targeted screening workflow, and Suspect Screening, specifically designed for carbon–carbon (C–C) backbone oligomers.
 
-![Cover]([https://github.com/FangLabNTU/Oligomer-Finder/assets/67109373/b4018489-a248-4aa4-9c00-b2003291b166](https://github.com/FangLabNTU/Oligomer-Finder/blob/8230a55f4a88de4613fea4560d450c168bfd6c04/images/Figure%204.png))
+![Cover](https://github.com/FangLabNTU/Oligomer-Finder/blob/8230a55f4a88de4613fea4560d450c168bfd6c04/images/Figure%204.png)
 
 Oligomer = Repeat unit * Degree of polymerization + End group
 
