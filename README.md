@@ -31,11 +31,13 @@ Please note that the exported data structures differ between MS-DIAL versions. W
 
 Polymers containing heteroatoms in the main chain, such as poly(ethylene terephthalate) (PET), polyamides (PA), polylactic acid (PLA), and poly(butylene adipate-co-terephthalate) (PBAT), are expected to degrade into oligomers featuring oxidized end groups, particularly hydroxyl groups. These oligomers exhibit a repeated neutral loss (rNL) pattern in MS/MS analysis, a characteristic that aids in identifying them as oligomers. Additionally, this feature provides structural information about the oligomer, as well as its homologues and congeners, all of which originate from the same parent polymer.
 
+![Cover](https://github.com/FangLabNTU/Oligomer-Finder/blob/2e448adb76ecc9d4cd593cf0e81d41a384687642/images/Figure%205.png)
+
 Oligomer-Finder comprises three modules:
 1. **Seed oligomer-Finder**  
 2. **Homologue-Finder**  
 3. **Congener-Finder**  
-
+![Cover](https://github.com/FangLabNTU/Oligomer-Finder/blob/2e448adb76ecc9d4cd593cf0e81d41a384687642/images/Figure%206.png)
 All modules are developed in R. A graphical user interface (GUI) version of Oligomer-Finder, developed using [Qt Creator](https://www.qt.io/product/development-tools), is available for enhanced user convenience. A simplified version of the "Seed oligomer-Finder" module is also available in Python (`SeedOligomer-Finder.py`) for screening seed oligomer candidates with varying confidence levels.
 
 ---
@@ -48,7 +50,7 @@ We proposed a suspect screening framework modified from “Homologue-Finder.” 
 1. Homologue screening  
 2. Diagnostic NL check (43.9898 Da for di-carboxylic end structure)  
 3. RT prediction  
-
+![Cover](https://github.com/FangLabNTU/Oligomer-Finder/blob/2e448adb76ecc9d4cd593cf0e81d41a384687642/images/Figure%207.png)
 ---
 
 ## Additional Information
