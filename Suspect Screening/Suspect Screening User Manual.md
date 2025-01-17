@@ -38,21 +38,21 @@ An oligomer is a molecule that consists of a few repeating units. Polymer oligom
 2. **Initializing peak_table:**
    - New columns are initialized:
      - **DP (Degree of Polymerization):** Set to 0 initially.
-     - **EG:** Stores the formula of the identified oligomer group.
+     - **EG:** Stores the end group formula of the identified oligomer group.
      - **RU:** Stores acronyms/identifiers for the oligomer groups.
      
 3. **Reading Oligomer Suspect List:**
    - The suspect oligomer list is read from the Excel file `Plastic oligomer suspect list.xlsx`, containing:
      - **Differ mass:** The mass difference for each oligomer.
-     - **NL mass:** Neutral loss mass for each oligomer.
+     - **NL mass:** Repeat unit mass for each oligomer.
      - **Acronyms:** Identifiers for each oligomer.
-     - **Differ formula:** Chemical formulas for each oligomer.
+     - **Differ formula:** Chemical formulas for each end group.
 
 4. **Iterating Over Each Peak:**
    - The script loops through each peak in `peak_table` and compares the measured mass with the suspect oligomers.
 
 5. **Calculating Estimated Oligomer Units (`n_estimate`):**
-   - The number of oligomer units is estimated using the formula:
+   - The number of oligomer repeat units is estimated using the formula:
    $$
    n_{\text{estimate}} = \frac{\text{row1['Mass']} - \text{row2['Differ mass']}}{\text{row2['NL mass']}}
    $$
@@ -72,7 +72,7 @@ $$
 - If a match is found, the following values are assigned:
   - **DP:** The number of oligomer units (n).
   - **RU:** The acronym/identifier of the matched oligomer.
-  - **EG:** The differential formula of the matched oligomer.
+  - **EG:** The end group formula of the matched oligomer.
 
 ---
 
@@ -123,3 +123,6 @@ $$
 
 5. **Fallback:**
 - If sufficient data points for the regression are unavailable, a default RT (`rt_min`) is used.
+  
+January 2025
+FangLab
