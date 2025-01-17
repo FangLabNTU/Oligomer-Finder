@@ -53,9 +53,9 @@ An oligomer is a molecule that consists of a few repeating units. Polymer oligom
 
 5. **Calculating Estimated Oligomer Units (`n_estimate`):**
    - The number of oligomer units is estimated using the formula:
-$$
-n_{\text{estimate}} = \frac{\text{row1['Mass']} - \text{row2['Differ mass']}}{\text{row2['NL mass']}}
-$$
+   $$
+   n_{\text{estimate}} = \frac{\text{row1['Mass']} - \text{row2['Differ mass']}}{\text{row2['NL mass']}}
+   $$
 - If `n_estimate <= 0`, the script moves to the next iteration.
 
 6. **Checking for Range of Estimates:**
