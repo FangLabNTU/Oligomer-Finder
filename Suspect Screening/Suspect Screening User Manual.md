@@ -25,4 +25,4 @@ An oligomer is a molecule that consists of a few repeating units. Polymer oligom
 
 **Suspect Screening** is a program developed as a supplement to **Oligomer-Finder** for seed molecule-guided screening and annotation of oligomers with a carbon−carbon (C-C) backbone in MS data.
 
-**MS-DIAL** (http://prime.psc.riken.jp/compms/msdial/main.html) is used for the first treatment of MS data and supports multiple MS/MS instruments (MALDI-MS/MS, GC/MS/MS, and LC/MS/MS) and MS vendors (Agilent, Bruker, Sciex, Shimadzu, Thermo, and Waters).
+**MS-DIAL** (http://prime.psc.riken.jp/compms/msdial/main.html) is used for the first treatment of MS data and supports multiple MS/MS instruments (MALDI-MS, GC/MS, and LC/MS/MS) and MS vendors (Agilent, Bruker, Sciex, Shimadzu, Thermo, and Waters).
