@@ -60,7 +60,7 @@ We proposed a suspect screening framework modified from “Homologue-Finder.” 
 ## Additional Information
 
 For more details, please refer to the user protocols for Oligomer-Finder and Suspect Screening. These protocols provide comprehensive guidance on using the tools and interpreting results.
-For the complete study, please refer to doi.org/10.21203/rs.3.rs-3997133/v1.
+For the complete study, please refer to https://www.nature.com/articles/s44221-025-00418-7.
 
 ---
 
