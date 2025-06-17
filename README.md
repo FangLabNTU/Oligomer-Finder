@@ -41,8 +41,8 @@ Oligomer-Finder comprises three modules:
 ![Cover](https://github.com/FangLabNTU/Oligomer-Finder/blob/2e448adb76ecc9d4cd593cf0e81d41a384687642/images/Figure%206.png)
 
 All modules are developed in R. A graphical user interface (GUI) version of Oligomer-Finder, developed using [Qt Creator](https://www.qt.io/product/development-tools), is available for enhanced user convenience. A simplified version of the "Seed oligomer-Finder" module is also available in Python (`SeedOligomer-Finder.py`) for screening seed oligomer candidates with varying confidence levels.
-
 Notice: The Congener-Finder module in the GUI version currently experiences errors on some Windows PCs. An update will be released soon. The R source code runs without errors.
+
 ---
 
 ## Suspect Screening: Polymer Oligomers with a Carbon–Carbon (C–C) Backbone
@@ -65,5 +65,5 @@ For the complete study, please refer to https://www.nature.com/articles/s44221-0
 
 ---
 
-**January 2025**  
+**June 2025**  
 **FangLab**
