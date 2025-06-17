@@ -42,6 +42,7 @@ Oligomer-Finder comprises three modules:
 
 All modules are developed in R. A graphical user interface (GUI) version of Oligomer-Finder, developed using [Qt Creator](https://www.qt.io/product/development-tools), is available for enhanced user convenience. A simplified version of the "Seed oligomer-Finder" module is also available in Python (`SeedOligomer-Finder.py`) for screening seed oligomer candidates with varying confidence levels.
 
+Notice: The Congener-Finder module in the GUI version currently experiences errors on some Windows PCs. An update will be released soon. The R source code runs without errors.
 ---
 
 ## Suspect Screening: Polymer Oligomers with a Carbon–Carbon (C–C) Backbone
